@@ -10,17 +10,19 @@ import str "strings"
 import "time"
 import "flag"
 
+type Member struct {
+	Name   string
+	Rank   string
+	Joined string
+}
+type Conf struct {
+	AccessToken string
+	GuildID     string
+}
+
 func main() {
-	type Member struct {
-		Name   string
-		Rank   string
-		Joined string
-	}
 
-	type Conf struct {
-		Token string
-	}
-
+	flag.Parse()
 	file, _ := os.Open("config.json")
 	decoder := json.NewDecoder(file)
 	conf := Conf{}
@@ -32,26 +34,20 @@ func main() {
 	var when string
 	whenParsed := time.Now()
 
-	//get the rank argument
 	flag.StringVar(&when, "date", "default", "a date in YYYY-MM-DD format")
 
-	flag.Parse()
+	//get the rank argument
 	rank := string(flag.Arg(0))
-	//token := string(flag.Arg(1))
-
-	fmt.Println(when)
-	fmt.Println(rank)
 
 	if when == "default" {
 		whenParsed = time.Now()
 	} else {
 		whenParsed, _ = time.Parse("2006-01-02", when)
 	}
-	fmt.Println(whenParsed)
 
 	var m []Member
 
-	resp, err := http.Get("https://api.guildwars2.com/v2/guild/6E313C3A-02E3-4170-88D4-F1709BAE0F1A/members?access_token=" + conf.Token)
+	resp, err := http.Get("https://api.guildwars2.com/v2/guild/" + conf.GuildID + "/members?access_token=" + conf.AccessToken)
 	if err != nil {
 
 	}
@@ -59,7 +55,6 @@ func main() {
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		body, _ := ioutil.ReadAll(resp.Body)
-		//bodyString := string(body)
 		err := json.Unmarshal(body, &m)
 		if err != nil {
 			fmt.Println("error", err)
